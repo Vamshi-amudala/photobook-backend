@@ -3,15 +3,16 @@ import mongoose from 'mongoose';
 const passwordResetSchema = new mongoose.Schema(
   {
     email: { type: String, required: true },
-    token: { type: String, required: true, unique: true },
+    otp: { type: String, required: true },
     userType: { type: String, enum: ['user', 'photographer', 'admin'], required: true },
     expiresAt: { type: Date, required: true },
+    isVerified: { type: Boolean, default: false },
     isUsed: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
 
-// Index for automatic cleanup of expired tokens
+// Auto cleanup expired OTPs
 passwordResetSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model('PasswordReset', passwordResetSchema);

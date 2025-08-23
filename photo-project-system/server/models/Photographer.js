@@ -6,7 +6,14 @@ const photographerSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6 },
-    phone:{ type : String, require:true, minlength:10, maxlength:10},
+   phone: { 
+  type: String, 
+  required: true, 
+  minlength: 10, 
+  maxlength: 10,
+  match: /^[0-9]{10}$/ 
+},
+
     displayName: { type: String, required: true },
     bio: String,
     genres: [String], // wedding, fashion, events, etc.

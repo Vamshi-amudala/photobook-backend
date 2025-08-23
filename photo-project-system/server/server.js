@@ -33,6 +33,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 
+
 const PORT = process.env.PORT || 5000;
 
 connectDB(process.env.MONGO_URI).then(() => {

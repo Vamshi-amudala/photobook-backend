@@ -17,7 +17,7 @@ export const register = async (req, res) => {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   
   try {
-    const { name, email, password, displayName, bio, genres, pricing, location } = req.body;
+    const { name, email, password,phone, displayName, bio, genres, pricing, location } = req.body;
     
     const exists = await Photographer.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered' });
@@ -26,6 +26,7 @@ export const register = async (req, res) => {
       name, 
       email, 
       password, 
+      phone,
       displayName, 
       bio, 
       genres, 
@@ -39,6 +40,7 @@ export const register = async (req, res) => {
         id: photographer._id, 
         name: photographer.name, 
         email: photographer.email,
+        phone: photographer.phone,
         displayName: photographer.displayName,
         status: photographer.status
       } 
@@ -66,6 +68,7 @@ export const login = async (req, res) => {
       id: photographer._id, 
       name: photographer.name, 
       email: photographer.email,
+      phone: photographer.phone,
       displayName: photographer.displayName,
       status: photographer.status
     } 
