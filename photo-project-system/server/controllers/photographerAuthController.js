@@ -17,7 +17,7 @@ export const register = async (req, res) => {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   
   try {
-    const { name, email, password,phone, displayName, bio, genres, pricing, location } = req.body;
+    const { name, email, password, phone, displayName, bio, genres, pricing, location, profilePic } = req.body;
     
     const exists = await Photographer.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered' });
@@ -31,7 +31,8 @@ export const register = async (req, res) => {
       bio, 
       genres, 
       pricing, 
-      location 
+      location,
+      profilePic // ✅ store URL
     });
     
     return res.status(201).json({ 
@@ -42,7 +43,8 @@ export const register = async (req, res) => {
         email: photographer.email,
         phone: photographer.phone,
         displayName: photographer.displayName,
-        status: photographer.status
+        status: photographer.status,
+        profilePic: photographer.profilePic // ✅ include in response
       } 
     });
   } catch (e) {
@@ -70,8 +72,37 @@ export const login = async (req, res) => {
       email: photographer.email,
       phone: photographer.phone,
       displayName: photographer.displayName,
-      status: photographer.status
+      status: photographer.status,
+      profilePic: photographer.profilePic // ✅ include in response
     } 
   });
 };
 
+export const updatePhotographerProfile = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const photographerId = req.user.id; // from authMiddleware
+    const updates = req.body; // all fields sent by frontend
+
+    const photographer = await Photographer.findById(photographerId);
+    if (!photographer) return res.status(404).json({ message: "Photographer not found" });
+
+    // Update only provided fields
+    for (const key in updates) {
+      if (updates.hasOwnProperty(key)) {
+        photographer[key] = updates[key];
+      }
+    }
+
+    await photographer.save();
+
+    return res.json({
+      message: "Profile updated successfully",
+      photographer
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};

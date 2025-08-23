@@ -6,14 +6,13 @@ const photographerSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6 },
-   phone: { 
-  type: String, 
-  required: true, 
-  minlength: 10, 
-  maxlength: 10,
-  match: /^[0-9]{10}$/ 
-},
-
+    phone: { 
+      type: String, 
+      required: true, 
+      minlength: 10, 
+      maxlength: 10,
+      match: /^[0-9]{10}$/ 
+    },
     displayName: { type: String, required: true },
     bio: String,
     genres: [String], // wedding, fashion, events, etc.
@@ -30,11 +29,13 @@ const photographerSchema = new mongoose.Schema(
       state: String, 
       country: String 
     },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    profilePic: { type: String, default: "" } // ✅ new field for profile picture URL
   },
   { timestamps: true }
 );
 
+// Password hashing
 photographerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -42,6 +43,7 @@ photographerSchema.pre('save', async function (next) {
   next();
 });
 
+// Compare password method
 photographerSchema.methods.comparePassword = function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
