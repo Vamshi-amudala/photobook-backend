@@ -1,12 +1,11 @@
 import { validationResult } from "express-validator";
-import bcrypt from "bcryptjs";
 import PasswordReset from "../models/PasswordReset.js";
 import User from "../models/User.js";
 import Photographer from "../models/Photographer.js";
 import Admin from "../models/Admin.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
-// helper: pick model
+// Helper: pick correct model
 const getUserModel = (userType) => {
   switch (userType) {
     case "user": return User;
@@ -28,13 +27,15 @@ export const forgotPassword = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // clear any old
+    // Remove old OTPs
     await PasswordReset.deleteMany({ email, userType });
 
+    // Create new OTP
     await PasswordReset.create({ email, otp, userType, expiresAt });
 
+    // Send OTP via email
     await sendEmail(
       email,
       "Password Reset OTP",
@@ -55,6 +56,9 @@ export const forgotPassword = async (req, res) => {
 
 /* ------------------ STEP 2: Reset Password (with OTP) ------------------ */
 export const resetPassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
   try {
     const { email, userType, otp, newPassword, confirmPassword } = req.body;
 
@@ -62,22 +66,20 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // check otp
+    // Find OTP record
     const record = await PasswordReset.findOne({ email, userType, otp });
     if (!record) return res.status(400).json({ message: "Invalid OTP" });
-    if (record.expiresAt < new Date()) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
+    if (record.expiresAt < new Date()) return res.status(400).json({ message: "OTP expired" });
 
     const UserModel = getUserModel(userType);
     const user = await UserModel.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // update pass
-    user.password = await bcrypt.hash(newPassword, 10);
+    // Assign new password (pre-save hook will hash it)
+    user.password = newPassword;
     await user.save();
 
-    // delete OTP record
+    // Remove used OTPs
     await PasswordReset.deleteMany({ email, userType });
 
     return res.json({ message: "Password reset successful" });
