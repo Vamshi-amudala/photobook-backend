@@ -4,7 +4,7 @@ import { forgotPassword, resetPassword } from "../controllers/passwordResetContr
 
 const router = Router();
 
-// Step 1: Send OTP
+
 router.post(
   "/forgot",
   [
@@ -14,7 +14,7 @@ router.post(
   forgotPassword
 );
 
-// Step 2: Verify OTP + Reset Password
+
 router.post(
   "/reset",
   [
