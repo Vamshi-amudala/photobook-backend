@@ -1,23 +1,23 @@
 import Booking from '../models/Booking.js';
 import Photographer from '../models/Photographer.js';
 
-// Create a new booking
+
 export const createBooking = async (req, res) => {
   try {
     const { photographer: photographerId, date, timeSlot, package: selectedPackage, notes } = req.body;
 
-    // Check photographer exists and is approved
+    
     const photographer = await Photographer.findById(photographerId);
     if (!photographer || photographer.status !== 'approved') {
       return res.status(404).json({ message: 'Photographer not found or not approved' });
     }
 
-    // Validate package
+    
     if (!['basic','premium','deluxe'].includes(selectedPackage)) {
       return res.status(400).json({ message: 'Invalid package selected' });
     }
 
-    // Optionally: Check if the slot is already booked
+    
     const existingBooking = await Booking.findOne({ 
       photographer: photographerId, 
       date, 
@@ -28,7 +28,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ message: 'Selected slot is already booked' });
     }
 
-    // Create booking
+    
     const booking = await Booking.create({
       user: req.user.id,
       photographer: photographerId,
@@ -47,7 +47,7 @@ export const createBooking = async (req, res) => {
   }
 };
 
-// Get bookings for current user or photographer
+
 export const myBookings = async (req, res) => {
   try {
     let filter = {};
@@ -64,7 +64,7 @@ export const myBookings = async (req, res) => {
   }
 };
 
-// Update booking status (photographer/admin)
+
 export const updateStatus = async (req, res) => {
   try {
     const { id } = req.params;

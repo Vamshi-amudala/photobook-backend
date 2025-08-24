@@ -118,3 +118,32 @@ export const updatePhotographerProfile = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+export const getPhotographerDashboard = async (req, res) => {
+  try {
+    const photographerId = req.user.id;
+
+    // Count total bookings
+    const [totalBookings, pendingBookings, completedBookings] = await Promise.all([
+      Booking.countDocuments({ photographer: photographerId }),
+      Booking.countDocuments({ photographer: photographerId, status: 'pending' }),
+      Booking.countDocuments({ photographer: photographerId, status: 'completed' }),
+    ]);
+
+    // Sum earnings for completed bookings (assumes 'amount' is stored in booking)
+    const earnings = await Booking.aggregate([
+      { $match: { photographer: photographerId, status: 'completed' } },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+
+    res.json({
+      totalBookings,
+      pendingBookings,
+      completedBookings,
+      totalEarnings: earnings.length ? earnings[0].total : 0
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

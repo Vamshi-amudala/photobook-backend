@@ -38,7 +38,7 @@ export const login = async (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // set by auth middleware
+    const userId = req.user.id; 
     const { name, phone } = req.body;
 
     const user = await User.findById(userId);

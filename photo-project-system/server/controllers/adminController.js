@@ -2,7 +2,7 @@ import Photographer from '../models/Photographer.js';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 
-// Approve or update photographer status
+
 export const approveProfile = async (req, res) => {
   const { photographerId, status } = req.body; // approved | blocked | pending
   const photographer = await Photographer.findByIdAndUpdate(
@@ -13,7 +13,7 @@ export const approveProfile = async (req, res) => {
   res.json(photographer);
 };
 
-// Stats for admin dashboard
+
 export const getAdminDashboard = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -38,19 +38,19 @@ export const getAdminDashboard = async (req, res) => {
   }
 };
 
-// List all users
+
 export const listUsers = async (req, res) => {
   const users = await User.find({}, 'name email role isActive createdAt updatedAt');
   res.json(users);
 };
 
-// List all photographers
+
 export const listPhotographers = async (req, res) => {
   const photographers = await Photographer.find({}, 'name email displayName status isActive createdAt updatedAt');
   res.json(photographers);
 };
 
-// List photographers by status
+
 export const listPhotographersByStatus = async (req, res) => {
   const { status } = req.query;
   const filter = status ? { status } : {};
@@ -58,21 +58,21 @@ export const listPhotographersByStatus = async (req, res) => {
   res.json(photographers);
 };
 
-// Block a user
+
 export const blockUser = async (req, res) => {
   const { userId } = req.body;
   const user = await User.findByIdAndUpdate(userId, { isActive: false }, { new: true });
   res.json(user);
 };
 
-// Delete a user
+
 export const deleteUser = async (req, res) => {
   const { userId } = req.body;
   await User.findByIdAndDelete(userId);
   res.json({ message: 'User deleted successfully' });
 };
 
-// Block a photographer
+
 export const blockPhotographer = async (req, res) => {
   const { photographerId } = req.body;
   const photographer = await Photographer.findByIdAndUpdate(
@@ -83,7 +83,7 @@ export const blockPhotographer = async (req, res) => {
   res.json(photographer);
 };
 
-// Delete a photographer
+
 export const deletePhotographer = async (req, res) => {
   const { photographerId } = req.body;
   await Photographer.findByIdAndDelete(photographerId);

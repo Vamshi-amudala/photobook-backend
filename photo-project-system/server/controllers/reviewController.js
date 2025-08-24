@@ -17,7 +17,7 @@ export const addReview = async (req, res) => {
     comment
   });
 
-  // update aggregate rating
+  
   const photographer = await Photographer.findById(booking.photographer);
   const avg = await Review.aggregate([
     { $match: { photographer: booking.photographer } },

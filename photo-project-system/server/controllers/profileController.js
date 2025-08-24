@@ -3,16 +3,14 @@ export const listApproved = async (req, res) => {
   try {
     const { city, genre, sortBy = 'pricing.baseRate', sortOrder = 'asc', page = 1, limit = 10 } = req.query;
 
-    // Base filter: approved and active
+   
     const filter = { status: 'approved', isActive: true };
 
-    // Filter by city
+   
     if (city) filter['location.city'] = new RegExp(`^${city}$`, 'i');
-
-    // Filter by genre (genres is an array)
     if (genre) filter.genres = { $in: [new RegExp(genre, 'i')] };
 
-    // Sorting
+  
     const sortField = sortBy === 'genre' ? 'genres' : 'pricing.baseRate';
     const sort = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
 

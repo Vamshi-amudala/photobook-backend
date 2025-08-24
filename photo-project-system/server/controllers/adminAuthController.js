@@ -22,7 +22,7 @@ export const login = async (req, res) => {
   const ok = await admin.comparePassword(password);
   if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
   
-  // Update last login
+  
   admin.lastLogin = new Date();
   await admin.save();
   

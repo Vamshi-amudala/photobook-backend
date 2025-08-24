@@ -5,7 +5,7 @@ import Photographer from "../models/Photographer.js";
 import Admin from "../models/Admin.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
-// Helper: pick correct model
+
 const getUserModel = (userType) => {
   switch (userType) {
     case "user": return User;
@@ -15,7 +15,7 @@ const getUserModel = (userType) => {
   }
 };
 
-/* ------------------ STEP 1: Forgot Password ------------------ */
+
 export const forgotPassword = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -29,13 +29,13 @@ export const forgotPassword = async (req, res) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Remove old OTPs
+  
     await PasswordReset.deleteMany({ email, userType });
 
-    // Create new OTP
+
     await PasswordReset.create({ email, otp, userType, expiresAt });
 
-    // Send OTP via email
+    
     await sendEmail(
       email,
       "Password Reset OTP",
@@ -54,7 +54,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-/* ------------------ STEP 2: Reset Password (with OTP) ------------------ */
+
 export const resetPassword = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -66,7 +66,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // Find OTP record
+   
     const record = await PasswordReset.findOne({ email, userType, otp });
     if (!record) return res.status(400).json({ message: "Invalid OTP" });
     if (record.expiresAt < new Date()) return res.status(400).json({ message: "OTP expired" });
@@ -75,11 +75,11 @@ export const resetPassword = async (req, res) => {
     const user = await UserModel.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Assign new password (pre-save hook will hash it)
+    
     user.password = newPassword;
     await user.save();
 
-    // Remove used OTPs
+    
     await PasswordReset.deleteMany({ email, userType });
 
     return res.json({ message: "Password reset successful" });
