@@ -21,13 +21,13 @@ app.use(morgan('dev'));
 
 app.get('/', (_req, res) => res.send('Photo Booking API ✅'));
 
-// Authentication routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/photographer/auth', photographerAuthRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 
-// Application routes
+
 app.use('/api/profiles', profileRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
