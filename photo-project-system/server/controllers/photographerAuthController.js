@@ -1,6 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import Photographer from '../models/Photographer.js';
+import Booking from '../models/Booking.js';
+import Review from '../models/Review.js';
+
+
+
 
 function sign(photographer) {
   return jwt.sign({ 
@@ -81,7 +86,7 @@ export const login = async (req, res) => {
   });
 };
 
-// Profile update: only allowed after admin approval
+
 export const updatePhotographerProfile = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -119,31 +124,50 @@ export const updatePhotographerProfile = async (req, res) => {
   }
 };
 
+
+
 export const getPhotographerDashboard = async (req, res) => {
   try {
     const photographerId = req.user.id;
+    const photographer = await Photographer.findById(photographerId);
+    if (!photographer) return res.status(404).json({ message: "Photographer not found" });
 
-    // Count total bookings
-    const [totalBookings, pendingBookings, completedBookings] = await Promise.all([
-      Booking.countDocuments({ photographer: photographerId }),
-      Booking.countDocuments({ photographer: photographerId, status: 'pending' }),
-      Booking.countDocuments({ photographer: photographerId, status: 'completed' }),
-    ]);
+    const bookings = await Booking.find({ photographer: photographerId });
 
-    // Sum earnings for completed bookings (assumes 'amount' is stored in booking)
-    const earnings = await Booking.aggregate([
-      { $match: { photographer: photographerId, status: 'completed' } },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
-    ]);
+    let totalBookings = bookings.length;
+    let pendingBookings = 0;
+    let acceptedBookings = 0;
+    let completedBookings = 0;
+    let totalEarnings = 0;
+
+    bookings.forEach(b => {
+      if (b.status === 'pending') pendingBookings++;
+      if (b.status === 'approved') acceptedBookings++;
+      if (b.status === 'completed') {
+        completedBookings++;
+        if (b.price != null) totalEarnings += Number(b.price);
+        else if (b.package) totalEarnings += photographer.pricing.packages[b.package]?.price || 0;
+      }
+    });
+
+    const recentReviews = await Review.find({ photographer: photographerId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('user', 'name email');
 
     res.json({
       totalBookings,
       pendingBookings,
+      acceptedBookings,
       completedBookings,
-      totalEarnings: earnings.length ? earnings[0].total : 0
+      totalEarnings,
+      rating: photographer.rating,
+      ratingCount: photographer.ratingCount,
+      recentReviews
     });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };

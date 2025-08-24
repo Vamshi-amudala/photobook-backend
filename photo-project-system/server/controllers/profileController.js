@@ -1,4 +1,6 @@
 import Photographer from '../models/Photographer.js';
+
+
 export const listApproved = async (req, res) => {
   try {
     const { city, genre, sortBy = 'pricing.baseRate', sortOrder = 'asc', page = 1, limit = 10 } = req.query;
