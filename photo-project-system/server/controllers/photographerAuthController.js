@@ -12,12 +12,13 @@ function sign(photographer) {
   });
 }
 
+// Registration: minimal info
 export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   
   try {
-    const { name, email, password, phone, displayName, bio, genres, pricing, location, profilePic } = req.body;
+    const { name, email, password, displayName, phone, location } = req.body;
     
     const exists = await Photographer.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already registered' });
@@ -26,14 +27,18 @@ export const register = async (req, res) => {
       name, 
       email, 
       password, 
-      phone,
       displayName, 
-      bio, 
-      genres, 
-      pricing, 
-      location,
-      profilePic // ✅ store URL
+      phone,
+      status: 'pending', 
+      isActive: true,
+      pricing: { baseRate: 5000, currency: 'INR' }, 
+      location, 
+      genres: [],
+      bio: "",
+      profilePic: "",
+      portfolio: []
     });
+
     
     return res.status(201).json({ 
       token: sign(photographer), 
@@ -43,8 +48,7 @@ export const register = async (req, res) => {
         email: photographer.email,
         phone: photographer.phone,
         displayName: photographer.displayName,
-        status: photographer.status,
-        profilePic: photographer.profilePic // ✅ include in response
+        status: photographer.status
       } 
     });
   } catch (e) {
@@ -52,6 +56,7 @@ export const register = async (req, res) => {
   }
 };
 
+// Login remains unchanged
 export const login = async (req, res) => {
   const { email, password } = req.body;
   const photographer = await Photographer.findOne({ email, isActive: true });
@@ -60,7 +65,6 @@ export const login = async (req, res) => {
   const ok = await photographer.comparePassword(password);
   if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
   
-  // Update last login
   photographer.lastLogin = new Date();
   await photographer.save();
   
@@ -72,29 +76,37 @@ export const login = async (req, res) => {
       email: photographer.email,
       phone: photographer.phone,
       displayName: photographer.displayName,
-      status: photographer.status,
-      profilePic: photographer.profilePic // ✅ include in response
+      status: photographer.status
     } 
   });
 };
 
+// Profile update: only allowed after admin approval
 export const updatePhotographerProfile = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   try {
-    const photographerId = req.user.id; // from authMiddleware
-    const updates = req.body; // all fields sent by frontend
+    const photographerId = req.user.id;
+    const updates = req.body;
 
     const photographer = await Photographer.findById(photographerId);
     if (!photographer) return res.status(404).json({ message: "Photographer not found" });
 
-    // Update only provided fields
-    for (const key in updates) {
-      if (updates.hasOwnProperty(key)) {
-        photographer[key] = updates[key];
-      }
+    if (photographer.status !== 'approved') {
+      return res.status(403).json({ message: "Profile update allowed only after admin approval" });
     }
+
+    if (updates.portfolio) {
+    photographer.portfolio.push(...updates.portfolio);
+    delete updates.portfolio;
+  }
+
+      for (const key in updates) {
+    if (updates.hasOwnProperty(key)) {
+      photographer[key] = updates[key];
+    }
+  }
 
     await photographer.save();
 
