@@ -2,45 +2,61 @@ import Photographer from '../models/Photographer.js';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 
+// Approve or update photographer status
 export const approveProfile = async (req, res) => {
   const { photographerId, status } = req.body; // approved | blocked | pending
-  const photographer = await Photographer.findByIdAndUpdate(photographerId, { status }, { new: true });
+  const photographer = await Photographer.findByIdAndUpdate(
+    photographerId,
+    { status },
+    { new: true }
+  );
   res.json(photographer);
 };
 
-export const stats = async (req, res) => {
-  const [users, photographersPending, activePhotographers, bookingsPending] = await Promise.all([
-    User.countDocuments(),
-    Photographer.countDocuments({ status: 'pending' }),
-    Photographer.countDocuments({ status: 'approved', isActive: true }),
-    Booking.countDocuments({ status: 'pending' })
-  ]);
-  res.json({ users, photographersPending,activePhotographers, bookingsPending });
+// Stats for admin dashboard
+export const getAdminDashboard = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const blockedUsers = await User.countDocuments({ isActive: false });
+    const activePhotographers = await Photographer.countDocuments({ status: 'approved', isActive: true });
+    const photographersPending = await Photographer.countDocuments({ status: 'pending' });
+    const bookingsPending = await Booking.countDocuments({ status: 'pending' });
+    const bookingsCompleted = await Booking.countDocuments({ status: 'completed' });
+    const pendingApprovals = await Photographer.countDocuments({ status: 'pending' });
+
+    res.json({
+      totalUsers,
+      blockedUsers,
+      activePhotographers,
+      photographersPending,
+      bookingsPending,
+      bookingsCompleted,
+      pendingApprovals
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-// GET /api/admin/users
+// List all users
 export const listUsers = async (req, res) => {
-  const users = await User.find({}, 'name email role isActive createdAt updatedAt'); // select only relevant fields
+  const users = await User.find({}, 'name email role isActive createdAt updatedAt');
   res.json(users);
 };
 
-
-// GET /api/admin/photographers
+// List all photographers
 export const listPhotographers = async (req, res) => {
   const photographers = await Photographer.find({}, 'name email displayName status isActive createdAt updatedAt');
   res.json(photographers);
 };
 
-// Optional: list by status
-// GET /api/admin/photographers?status=pending
+// List photographers by status
 export const listPhotographersByStatus = async (req, res) => {
   const { status } = req.query;
   const filter = status ? { status } : {};
   const photographers = await Photographer.find(filter, 'name email displayName status isActive createdAt updatedAt');
   res.json(photographers);
 };
-
-
 
 // Block a user
 export const blockUser = async (req, res) => {
@@ -56,11 +72,14 @@ export const deleteUser = async (req, res) => {
   res.json({ message: 'User deleted successfully' });
 };
 
-
 // Block a photographer
 export const blockPhotographer = async (req, res) => {
   const { photographerId } = req.body;
-  const photographer = await Photographer.findByIdAndUpdate(photographerId, { isActive: false, status: 'blocked' }, { new: true });
+  const photographer = await Photographer.findByIdAndUpdate(
+    photographerId,
+    { isActive: false, status: 'blocked' },
+    { new: true }
+  );
   res.json(photographer);
 };
 

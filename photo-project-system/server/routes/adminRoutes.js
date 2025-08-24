@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { auth, permitAdmin} from '../middleware/auth.js';
 import {
-  stats,
   approveProfile,
   listUsers,
   listPhotographers,
@@ -11,7 +10,7 @@ import {
 const router = Router();
 
 router.patch('/profiles', auth, permitAdmin, approveProfile);
-router.get('/stats', auth, permitAdmin, stats);
+// router.get('/stats', auth, permitAdmin, stats);
 router.get('/users', auth, permitAdmin, listUsers);
 router.patch('/users/block', auth, permitAdmin, blockUser);
 router.delete('/users', auth, permitAdmin, deleteUser);

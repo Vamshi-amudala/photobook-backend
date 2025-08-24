@@ -70,13 +70,23 @@ export const updateStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+      const booking = await Booking.findById(id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+
     if (!['pending','approved','rejected','completed'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const booking = await Booking.findById(id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
-
+   if (booking.status === 'rejected') {
+    return res.status(400).json({ message: "Already rejected, cannot update again..!" });
+    }
+    
+    if (['rejected', 'completed'].includes(booking.status)) {
+        return res.status(400).json({ message: `Booking is ${booking.status}, cannot update again..!` });
+    }
+    
+    
     booking.status = status;
     await booking.save();
 

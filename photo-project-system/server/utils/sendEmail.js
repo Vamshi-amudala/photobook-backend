@@ -24,3 +24,33 @@ export const sendEmail = async (to, subject, html) => {
     throw new Error("Email sending failed");
   }
 };
+
+export const approveProfile = async (req, res) => {
+  const { photographerId, status } = req.body;
+  const photographer = await Photographer.findByIdAndUpdate(
+    photographerId, 
+    { status }, 
+    { new: true }
+  );
+
+  if (!photographer) return res.status(404).json({ message: "Photographer not found" });
+
+  // Send email notification
+  if (status === 'approved') {
+    await sendEmail(
+      photographer.email,
+      "Profile Approved ✅",
+      `<p>Hello ${photographer.displayName},</p>
+       <p>Your profile has been approved. You can now update your studio details and start accepting bookings!</p>`
+    );
+  } else if (status === 'blocked') {
+    await sendEmail(
+      photographer.email,
+      "Profile Rejected ❌",
+      `<p>Hello ${photographer.displayName},</p>
+       <p>Unfortunately, your profile registration was rejected. Contact support for details.</p>`
+    );
+  }
+
+  res.json(photographer);
+};
