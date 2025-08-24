@@ -35,7 +35,7 @@ export const approveProfile = async (req, res) => {
 
   if (!photographer) return res.status(404).json({ message: "Photographer not found" });
 
-  // Send email notification
+
   if (status === 'approved') {
     await sendEmail(
       photographer.email,
