@@ -12,7 +12,6 @@ const passwordResetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto cleanup expired OTPs
 passwordResetSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model('PasswordReset', passwordResetSchema);

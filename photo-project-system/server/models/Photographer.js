@@ -49,7 +49,6 @@ const photographerSchema = new mongoose.Schema(
 );
 
 
-// Hash password before saving
 photographerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -57,7 +56,7 @@ photographerSchema.pre('save', async function(next) {
   next();
 });
 
-// Compare password
+
 photographerSchema.methods.comparePassword = function(candidate) {
   return bcrypt.compare(candidate, this.password);
 };
